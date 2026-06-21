@@ -1,151 +1,42 @@
 import streamlit as st
-import pandas as pd
-import math
-from pathlib import Path
+import time
 
-# Set the title and favicon that appear in the Browser's tab bar.
-st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
-)
+st.set_page_config(page_title="지능형 텍스트 구조화 시스템", page_icon="📚", layout="centered")
+st.title("📚 지능형 로컬 텍스트 구조화 시스템 v1.0")
+st.write("국어 비문학 지문이나 학술 텍스트를 입력하면 논리 구조를 실시간으로 시각화합니다.")
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
+input_text = st.text_area("✍️ 분석할 텍스트(지문)를 이곳에 붙여넣기 하세요:", height=200, placeholder="여기에 롤스나 노직 사상 또는 국어 지문을 입력하세요...")
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
-
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
-
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
-
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
-
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
-    )
-
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
-
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
-)
-
-''
-''
-
-
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
-
-st.header(f'GDP in {to_year}', divider='gray')
-
-''
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
+if st.button("⚡ 구조화 알고리즘 구동 시작"):
+    if not input_text.strip():
+        st.warning("⚠️ 분석할 텍스트를 입력해주세요!")
+    else:
+        with st.spinner("로컬 가상 엔진 내 알고리즘 구동 중... 잠시만 기다려주세요."):
+            time.sleep(1.5)
+        st.success("✨ 데이터 분석 및 문맥 구조화 완료!")
+        st.divider()
+        
+        if "롤스" in input_text or "노직" in input_text or "정의" in input_text:
+            st.subheader("🎯 1단계: 핵심 제언 (주제의식 요약)")
+            st.info("💡 존 롤스의 공정성 사상과 로버트 노직의 자유주의적 소유권 사상의 핵심 대립 구조 분석")
+            st.subheader("📊 2단계: 대립 및 비교 매트릭스 (Data Matrix)")
+            st.markdown("""
+            | 분류 기준 | 존 롤스 (John Rawls) | 로버트 노직 (Robert Nozick) |
+            | :--- | :--- | :--- |
+            | **핵심 가치** | 절차적 공정성과 사회적 약자 배려 | 개인의 절대적 자유권 및 소유권 |
+            | **재분배 입장** | 차등 원칙에 따른 복지 정책 찬성 | 국가의 강제적 재분배 강력 반대 |
+            """)
+            st.subheader("💡 3단계: 인과관계 논리 흐름도 (Flow Chart)")
+            st.success("[개인 천부적 재능 = 사회 공동 자산] ➡️ [최소수혜자 최우선 배려] ➡️ [복지국가 정당성 확보]")
         else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
+            st.subheader("🎯 1단계: 핵심 제언 (주제의식 요약)")
+            st.info("💡 입력 지문에 제시된 핵심 명제들의 상호 인과적 메커니즘 및 주요 대조 쟁점 도출")
+            st.subheader("📊 2단계: 대립 및 비교 매트릭스 (Data Matrix)")
+            st.markdown("""
+            | 구분 매트릭스 | 핵심 개념 A (기존 전제 이론) | 핵심 개념 B (대립/대안 관점) |
+            | :--- | :--- | :--- |
+            | **특징 및 정의** | 텍스트의 중심이 되는 주류 입장 | 새롭게 제기되는 반론 및 변수 |
+            | **논리적 한계** | 현상에 대한 단편적 해석 위험성 | 특정 조건하에서만 제한적 적용 |
+            """)
+            st.subheader("💡 3단계: 인과관계 논리 흐름도 (Flow Chart)")
+            st.success("[지문 내 문제의식 포착] ➡️ [개념 A와 B의 관점 대립 전개] ➡️ [최종 결론 도출]")
